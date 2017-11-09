@@ -1,0 +1,6 @@
+# depslib dependency file v1.0
+1510183100 source:c:\users\cristhian ocola\desktop\grafoo\main.cpp
+	<iostream>
+	<list>
+	<vector>
+
