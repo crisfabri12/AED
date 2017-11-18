@@ -4,22 +4,35 @@
 using namespace std;
 template<class N,class E>
 class CGraph;
-
 template<class G>
 class CEdge ;
+
 template<class G>
 class CNode
 {
     public:
 	typedef typename G::Edge Edge;
 	typedef typename G::NE N;
+	typedef typename G::EE E;
+	typedef typename G::Camino Camino;
 	N mdata;
-	N peso = -1;
+	E peso = 0;
+	int marca = false;
+	Camino recorrido;
 	vector<Edge*> m_edges;
 	CNode(N dato)
 	{
 	    mdata = dato;
 	}
+};
+
+template<class G>
+class camino
+{
+    public:
+    typedef typename G::Node Node;
+    vector<Node*> camino_r;
+
 };
 
 template<class G>
@@ -48,6 +61,7 @@ public:
 	typedef CGraph<N,E> self;
 	typedef CNode<self> Node;
 	typedef CEdge<self> Edge;
+	typedef camino<self> Camino;
 	typedef N NE;
 	typedef E EE;
 
@@ -55,8 +69,7 @@ public:
 	bool InsertNode(N x)
 	{
 	    Node *temp;
-	    int p;
-	    if(find(x,temp,&p))
+	    if(find(x,temp))
         {
             return 0;
         }
@@ -67,8 +80,7 @@ public:
 	{
 	    Node *aux;
 	    Node *aux2;
-	    int p1,p2;
-        if(find(a,aux,&p1) && find(b,aux2,&p2))
+        if(find(a,aux) && find(b,aux2))
         {
                 Edge *nuevo = new Edge(aux,aux2,dato);
                 if(dir == 1)
@@ -106,25 +118,24 @@ public:
 
 	}
 
-    bool find(N dato,Node *&pos,int *t)
+    bool find(N dato,Node *&pos)
     {
         for(int i=0;i<m_nodes.size();i++)
         {
             if(m_nodes[i]->mdata == dato)
             {
                 pos = m_nodes[i];
-                *t = i;
                 return 1;
             }
         }
         return 0;
 
     }
-    bool find_edge(Node *x,Edge *t,Edge *&re)
+    bool find_edge(Node *x,E t,Edge *&re)
     {
         for(int i=0;i<x->m_edges.size();i++)
         {
-            if(x->m_edges[i] == t)
+            if(x->m_edges[i]->m_data == t)
             {
                 re = x->m_edges[i];
                 return 1;
@@ -143,54 +154,129 @@ public:
         }
 
     }
+    bool  remove_edge(N a,N b,E x)
+    {
+        Edge *temp;
+        Node *n1;
+        Node *n2;
+        find(a,n1);
+        find(b,n2);
+        find_edge(n1,x,temp);
+        remove_vedges(n1,temp);
+        remove_vedges(n2,temp);
 
+
+    }
+
+    int posicion(Node *aux)
+    {
+        for(int i=0;i<m_nodes.size();i++)
+        {
+            if(m_nodes[i] == aux)
+            {
+                return i;
+            }
+        }
+    }
 
     bool remove_node(N x)
     {
         Node *aux;
-        int p;
-        if(!find(x,aux,&p))
+        if(!find(x,aux))
         {
             return 0;
         }
-        Node *temp1;
-        Node *temp2;
-        for(int i=0;i<aux->m_edges.size();i++)
+        N temp1;
+        N temp2;
+        int tam = aux->m_edges.size();
+        for(int i=0;i< tam;i++)
         {
-            temp1 = aux->m_edges[i]->m_nodes[0];
-            temp2 = aux->m_edges[i]->m_nodes[1];
-            cout<<temp1->mdata<<endl;
-            cout<<temp2->mdata<<endl;
-            remove_vedges(temp1,aux->m_edges[i]);
-            remove_vedges(temp2,aux->m_edges[i]);
+            E Edge_borrado = aux->m_edges[0]->m_data;
+            temp1 = aux->m_edges[0]->m_nodes[0]->mdata;
+            temp2 = aux->m_edges[0]->m_nodes[1]->mdata;
+            remove_edge(temp1,temp2,Edge_borrado);
         }
-
+        int pos = posicion(aux);
+        m_nodes.erase(m_nodes.begin()+pos);
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    N Dijkstra(N dato)
+    void Dijkstra(N nodo)
     {
         Node *temp;
-        if(!find(dato,temp))
+        find(nodo,temp);
+        bool marca;
+        if(temp->marca == true)
         {
-            return 0;
+            return ;
         }
-    }
+        cout<<temp->mdata<<endl;
+        int cont =0;
+        for(int i=0;i<temp->m_edges.size();i++)
+        {
+            Node *entrada = temp->m_edges[i]->m_nodes[1];
+            if(entrada == temp)
+            {
+                entrada = temp->m_edges[i]->m_nodes[0];
+            }
+            cout<<entrada->mdata;
+            E peso = temp->m_edges[i]->m_data + temp->peso;
+            if(entrada->peso == 0 && entrada->marca == false)
+            {
+                entrada->recorrido.camino_r.push_back(temp);
+                entrada->peso = peso ;
+            }
+            else if(entrada->peso > peso && entrada->marca == false)
+            {
+                entrada->recorrido.camino_r.push_back(temp);
+                entrada->peso = peso;
+            }
+            if(entrada->marca == true)
+            {
+                marca = true;
+            }
+        }
+        temp->marca = true;
 
+        cout<<endl;
+
+        if(marca)
+        {
+            return;
+        }
+        for(int i=0;i<temp->m_edges.size();i++)
+        {
+            Edge* menor = temp->m_edges[0];
+            for(int j=0;j<temp->m_edges.size();j++)
+            {
+                Edge * x = temp->m_edges[j];
+                if(x->m_data < menor->m_data && x->m_nodes[1]->marca == false)
+                {
+                    menor = x;
+
+                }
+            }
+            N dato = menor->m_nodes[1]->mdata;
+            Dijkstra(dato);
+        }
+
+        for(int i=0;i<m_nodes.size();i++)
+        {
+            if(m_nodes[i]->marca == false)
+            {
+                Dijkstra(m_nodes[i]->mdata);
+            }
+        }
+        for(int i=0;i<m_nodes.size();i++)
+        {
+            cout<<m_nodes[i]->mdata<<"------"<<m_nodes[i]->peso<<endl;
+            for(int j =0;j<m_nodes[i]->recorrido.camino_r.size();j++)
+            {
+                cout<<m_nodes[i]->recorrido.camino_r[j]->mdata;
+            }
+            cout<<endl;
+        }
+
+    }
 
 
 
@@ -202,22 +288,34 @@ public:
 
 
 int main(int argc, char *argv[]) {
-	CGraph<int,char> g;
-	g.InsertNode(8);
-	g.InsertNode(10);
-	g.InsertNode(3);
-	g.InsertNode(1);
-	g.InsertNode(2);
-	g.InsertNode(7);
-	g.InsertNode(4);
-	g.InsertEdge(8,10,1,'c');
-	g.InsertEdge(1,2,1,'c');
-	g.InsertEdge(2,3,1,'c');
-    g.InsertEdge(4,7,1,'e');
-    g.InsertEdge(4,8,1,'e');
-    g.InsertEdge(7,1,1,'c');
-    g.InsertEdge(3,1,1,'c');
-    g.remove_node(4);
+	CGraph<char,int> g;
+	g.InsertNode('1');
+	g.InsertNode('2');
+	g.InsertNode('3');
+	g.InsertNode('4');
+	g.InsertNode('6');
+	g.InsertNode('5');
+
+	g.InsertNode('7');
+	g.InsertNode('8');
+
+
+	g.InsertEdge('1','2',0,2);
+	g.InsertEdge('1','3',0,5);
+	g.InsertEdge('2','3',0,3);
+	g.InsertEdge('2','4',0,8);
+	g.InsertEdge('2','5',0,15);
+	g.InsertEdge('3','4',0,4);
+	g.InsertEdge('3','6',0,3);
+	g.InsertEdge('4','6',0,1);
+	g.InsertEdge('4','5',0,4);
+	g.InsertEdge('4','7',0,2);
+	g.InsertEdge('5','7',0,1);
+	g.InsertEdge('7','6',0,1);
+	g.InsertEdge('6','8',0,5);
+	g.InsertEdge('5','8',0,2);
+	g.InsertEdge('7','8',0,7);
 	g.imprimir();
+    g.Dijkstra('1');
 	return 0;
 }
