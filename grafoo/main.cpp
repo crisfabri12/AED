@@ -209,7 +209,6 @@ public:
         {
             return ;
         }
-        cout<<temp->mdata<<endl;
         int cont =0;
         for(int i=0;i<temp->m_edges.size();i++)
         {
@@ -218,15 +217,16 @@ public:
             {
                 entrada = temp->m_edges[i]->m_nodes[0];
             }
-            cout<<entrada->mdata;
             E peso = temp->m_edges[i]->m_data + temp->peso;
             if(entrada->peso == 0 && entrada->marca == false)
             {
+                entrada->recorrido.camino_r = temp->recorrido.camino_r;
                 entrada->recorrido.camino_r.push_back(temp);
                 entrada->peso = peso ;
             }
             else if(entrada->peso > peso && entrada->marca == false)
             {
+                entrada->recorrido.camino_r = temp->recorrido.camino_r;
                 entrada->recorrido.camino_r.push_back(temp);
                 entrada->peso = peso;
             }
@@ -236,8 +236,6 @@ public:
             }
         }
         temp->marca = true;
-
-        cout<<endl;
 
         if(marca)
         {
@@ -261,19 +259,32 @@ public:
 
         for(int i=0;i<m_nodes.size();i++)
         {
-            if(m_nodes[i]->marca == false)
+
+            while(m_nodes[i] == false)
             {
-                Dijkstra(m_nodes[i]->mdata);
+                i++;
             }
+            Node* menor = m_nodes[i];
+            for(int j=0;j<m_nodes.size();j++)
+            {
+                Node * x = m_nodes[j];
+                if(x->mdata < menor->mdata && x->marca == false)
+                {
+                    menor = x;
+
+                }
+            }
+
+            Dijkstra(menor->mdata);
         }
         for(int i=0;i<m_nodes.size();i++)
         {
-            cout<<m_nodes[i]->mdata<<"------"<<m_nodes[i]->peso<<endl;
+
             for(int j =0;j<m_nodes[i]->recorrido.camino_r.size();j++)
             {
-                cout<<m_nodes[i]->recorrido.camino_r[j]->mdata;
+                cout<<m_nodes[i]->recorrido.camino_r[j]->mdata<<",";
             }
-            cout<<endl;
+            cout<<m_nodes[i]->mdata<<"------"<<m_nodes[i]->peso<<endl;
         }
 
     }
@@ -289,15 +300,14 @@ public:
 
 int main(int argc, char *argv[]) {
 	CGraph<char,int> g;
-	g.InsertNode('1');
-	g.InsertNode('2');
-	g.InsertNode('3');
-	g.InsertNode('4');
+	g.InsertNode('8');
+	g.InsertNode('7');
 	g.InsertNode('6');
 	g.InsertNode('5');
-
-	g.InsertNode('7');
-	g.InsertNode('8');
+	g.InsertNode('4');
+	g.InsertNode('3');
+	g.InsertNode('2');
+	g.InsertNode('1');
 
 
 	g.InsertEdge('1','2',0,2);
